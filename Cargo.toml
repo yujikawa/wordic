@@ -2,6 +2,11 @@
 name = "wordic"
 version = "0.1.0"
 edition = "2021"
+authors= ["yujikawa"]
+description = "This is command line tool to manage word dictionary."
+license = "Apache-2.0"
+exclude = [".github"]
+repository = "https://github.com/yujikawa/wordic"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
