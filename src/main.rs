@@ -21,10 +21,10 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum SubCommands {
-    #[clap(arg_required_else_help = true, about="Show keys from dictionary")]
+    #[clap(about = "Show keys from dictionary")]
     List,
 
-    #[clap(arg_required_else_help = true, about="Add new dictionary")]
+    #[clap(arg_required_else_help = true, about = "Add new dictionary")]
     Add {
         key: String,
         value: String,
@@ -32,15 +32,11 @@ enum SubCommands {
         description: String,
     },
 
-    #[clap(arg_required_else_help = true, about="Get value from dictionary")]
-    Get {
-        key: String,
-    },
+    #[clap(arg_required_else_help = true, about = "Get value from dictionary")]
+    Get { key: String },
 
-    #[clap(arg_required_else_help = true, about="Remove value from dictionary")]
-    Rm {
-        key: String,
-    },
+    #[clap(arg_required_else_help = true, about = "Remove value from dictionary")]
+    Rm { key: String },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
