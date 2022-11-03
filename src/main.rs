@@ -7,7 +7,13 @@ use std::path::Path;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(
+    name = env!("CARGO_PKG_NAME"),
+    version = env!("CARGO_PKG_VERSION"),
+    author = env!("CARGO_PKG_AUTHORS"),
+    about = env!("CARGO_PKG_DESCRIPTION"),
+    arg_required_else_help = true,
+)]
 struct Cli {
     #[clap(subcommand)]
     subcommand: SubCommands,
@@ -21,6 +27,16 @@ enum SubCommands {
     Add {
         key: String,
         value: String,
+    },
+
+    #[clap(arg_required_else_help = true)]
+    Get {
+        key: String,
+    },
+
+    #[clap(arg_required_else_help = true)]
+    Rm {
+        key: String,
     },
 }
 
@@ -80,9 +96,9 @@ fn load_data() -> Vec<Wordic> {
 
 fn save(wds: Vec<Wordic>) -> Result<(), String> {
     let file_path = get_dict_path();
-    let mut serialized = serde_json::to_string(&wds).unwrap();
+    let serialized = serde_json::to_string(&wds).unwrap();
     let mut file = fs::File::create(file_path).unwrap();
-    file.write_all(serialized.as_bytes());
+    let _ = file.write_all(serialized.as_bytes()).unwrap();
     Ok(())
 }
 
@@ -111,18 +127,19 @@ fn remove(key: &str) -> Vec<Wordic> {
 }
 
 fn main() {
-    // let cli = Cli::parse();
-    // dbg!(cli.subcommand);
-    // println!("Hello {}!{}", cli.subcommand);
     init();
-    register(Wordic::new("sample1", "sample_value1")).unwrap();
-    register(Wordic::new("sample2", "sample_value2")).unwrap();
-    register(Wordic::new("sample3", "sample_value3")).unwrap();
-    show();
-    println!("value={}", get("sample1").unwrap());
-    // register(Wordic::new("sample2", "sample_value2"));
-    // register(Wordic::new("sample3", "sample_value3"));
-    // remove("sample2");
+    let cli = Cli::parse();
+
+    match cli.subcommand {
+        SubCommands::Add { key, value } => register(Wordic::new(&key, &value)).unwrap(),
+        SubCommands::List => show(),
+        SubCommands::Get { key } => println!("{}", get(&key).unwrap()),
+        SubCommands::Rm { key } => {
+            let wds = remove(&key);
+            save(wds).unwrap();
+            show();
+        }
+    }
 }
 
 #[cfg(test)]
