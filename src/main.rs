@@ -27,6 +27,8 @@ enum SubCommands {
     Add {
         key: String,
         value: String,
+        #[clap(default_value = "")]
+        description: String,
     },
 
     #[clap(arg_required_else_help = true)]
@@ -48,11 +50,11 @@ struct Wordic {
 }
 
 impl Wordic {
-    fn new(key: &str, value: &str) -> Self {
+    fn new(key: &str, value: &str, description: &str) -> Self {
         Wordic {
             key: key.to_string(),
             value: value.to_string(),
-            description: "".to_string(),
+            description: description.to_string(),
         }
     }
 }
@@ -116,7 +118,11 @@ fn get(key: &str) -> Result<String, String> {
 fn show() {
     let wds = load_data();
     for (i, v) in wds.iter().enumerate() {
-        println!("{} : {}", i, v.key);
+        if v.description.len() == 0 {
+            println!("{} : {}", i, v.key);
+        } else {
+            println!("{} : {} <{}> ", i, v.key, v.description);
+        }
     }
 }
 
@@ -131,7 +137,11 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.subcommand {
-        SubCommands::Add { key, value } => register(Wordic::new(&key, &value)).unwrap(),
+        SubCommands::Add {
+            key,
+            value,
+            description,
+        } => register(Wordic::new(&key, &value, &description)).unwrap(),
         SubCommands::List => show(),
         SubCommands::Get { key } => println!("{}", get(&key).unwrap()),
         SubCommands::Rm { key } => {
@@ -147,14 +157,14 @@ mod test {
     use super::*;
 
     fn setup() {
-        register(Wordic::new("sample1", "sample_value1")).unwrap();
-        register(Wordic::new("sample2", "sample_value2")).unwrap();
-        register(Wordic::new("sample3", "sample_value3")).unwrap();
+        register(Wordic::new("sample1", "sample_value1", "")).unwrap();
+        register(Wordic::new("sample2", "sample_value2", "")).unwrap();
+        register(Wordic::new("sample3", "sample_value3", "")).unwrap();
     }
 
     #[test]
     fn test_register() {
-        let value = register(Wordic::new("sample", "sample_value")).unwrap();
+        let value = register(Wordic::new("sample", "sample_value", "")).unwrap();
         assert!(() == value);
     }
 
