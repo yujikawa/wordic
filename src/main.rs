@@ -154,6 +154,7 @@ mod test {
     use super::*;
 
     fn setup() {
+        init();
         register(Wordic::new("sample1", "sample_value1", "")).unwrap();
         register(Wordic::new("sample2", "sample_value2", "")).unwrap();
         register(Wordic::new("sample3", "sample_value3", "")).unwrap();
