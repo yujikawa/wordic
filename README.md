@@ -1,6 +1,7 @@
 # wordic
 [![test](https://github.com/yujikawa/wordic/actions/workflows/test.yml/badge.svg)](https://github.com/yujikawa/wordic/actions/workflows/test.yml)
 [![wordic at crates.io](https://img.shields.io/crates/v/wordic.svg)](https://crates.io/crates/wordic)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This is command line tool to manage word dictionary.
 
