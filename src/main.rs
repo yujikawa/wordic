@@ -168,7 +168,8 @@ mod test {
     #[test]
     fn test_get() {
         setup();
-        let value = get("sample1").unwrap();
-        assert!(value == "sample_value1");
+        let value = register(Wordic::new("sample", "sample_value", "")).unwrap();
+        let value = get("sample").unwrap();
+        assert!(value == "sample_value");
     }
 }
