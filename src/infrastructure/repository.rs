@@ -6,7 +6,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 pub trait IDictionaryRepository {
-    fn new() -> Self; 
+    fn new() -> Self;
     fn init(&self) -> Result<(), String>;
 
     fn get_home_path(&self) -> PathBuf {
@@ -26,10 +26,9 @@ pub struct DictionaryJsonRepository {
     file_name: String,
 }
 impl IDictionaryRepository for DictionaryJsonRepository {
-
     fn new() -> DictionaryJsonRepository {
         DictionaryJsonRepository {
-            file_name: "wordic.json".to_string()
+            file_name: "wordic.json".to_string(),
         }
     }
     fn init(&self) -> Result<(), String> {
