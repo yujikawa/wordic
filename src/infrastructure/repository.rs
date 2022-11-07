@@ -98,10 +98,9 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_register() {
-        let dictionary_repository = DictionaryJsonRepository {
-            file_name: "wordic.json".to_string(),
-        };
+    fn test_repository() {
+        let dictionary_repository = DictionaryJsonRepository::new();
+        let _ = dictionary_repository.init().unwrap();
         let value = dictionary_repository
             .register(Dictionary::new(
                 String::from("sample"),
@@ -110,21 +109,9 @@ mod test {
             ))
             .unwrap();
         assert!(() == value);
-    }
-
-    #[test]
-    fn test_get() {
-        let dictionary_repository = DictionaryJsonRepository {
-            file_name: "wordic.json".to_string(),
-        };
-        let _value = dictionary_repository
-            .register(Dictionary::new(
-                String::from("sample"),
-                String::from("sample_value"),
-                String::from(""),
-            ))
-            .unwrap();
         let value = dictionary_repository.get(String::from("sample")).unwrap();
         assert!(value == "sample_value");
     }
+
+
 }
