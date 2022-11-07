@@ -112,6 +112,4 @@ mod test {
         let value = dictionary_repository.get(String::from("sample")).unwrap();
         assert!(value == "sample_value");
     }
-
-
 }
