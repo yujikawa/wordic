@@ -11,23 +11,27 @@ cargo install wordic
 ```
 
 # How to use?
-
+## First
 ```
-wordic 0.1.0
+wordic init
+```
 
+## How to add new item to dictionary?
+```
+wordic add {KEY} {VALUE}
+```
 
+## How to get item created from dictionary?
+```
+wordic get {KEY}
+```
 
-USAGE:
-    wordic <SUBCOMMAND>
+## How to remove item created from dictionary?
+```
+wordic rm {KEY}
+```
 
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
-
-SUBCOMMANDS:
-    add     Add new dictionary
-    get     Get value from dictionary
-    help    Print this message or the help of the given subcommand(s)
-    list    Show keys from dictionary
-    rm      Remove value from dictionary
+## How to show all item created from dictionary?
+```
+wordic show
 ```

@@ -18,6 +18,7 @@ impl<T: IDictionaryRepository> DictionaryApplicationService<T> {
 
     pub fn show(&self) {
         let dictionaries = self.dictionary_repository.load_data();
+        println!("You have created {} dictionaries", dictionaries.len());
         for (i, v) in dictionaries.iter().enumerate() {
             if v.description.len() == 0 {
                 println!("{} : {}", i, v.key);

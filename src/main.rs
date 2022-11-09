@@ -25,7 +25,7 @@ enum SubCommands {
     Init,
 
     #[clap(about = "Show keys from dictionary")]
-    List,
+    Show,
 
     #[clap(arg_required_else_help = true, about = "Add new dictionary")]
     Add {
@@ -59,7 +59,7 @@ fn main() {
         } => dictionary_application_service
             .register(Dictionary::new(key, value, description))
             .unwrap(),
-        SubCommands::List => dictionary_application_service.show(),
+        SubCommands::Show => dictionary_application_service.show(),
         SubCommands::Get { key } => {
             println!("{}", dictionary_application_service.get(key).unwrap())
         }
