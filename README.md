@@ -3,7 +3,7 @@
 [![wordic at crates.io](https://img.shields.io/crates/v/wordic.svg)](https://crates.io/crates/wordic)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-This is command line tool to manage word dictionary.
+This is command line tool to manage word dictionary. You can create own dictionariy on Local PC.
 
 # How to install?
 ```
