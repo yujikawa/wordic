@@ -5,6 +5,8 @@ mod infrastructure;
 use infrastructure::repository::{DictionaryJsonRepository, IDictionaryRepository};
 mod application;
 use application::dictionary_application_service::DictionaryApplicationService;
+mod functions;
+use functions::display::{display, Color};
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -61,7 +63,12 @@ fn main() {
             .unwrap(),
         SubCommands::Show => dictionary_application_service.show(),
         SubCommands::Get { key } => {
-            println!("{}", dictionary_application_service.get(key).unwrap())
+            let value = dictionary_application_service.get(key).unwrap();
+            if value.is_empty() {
+                display(&format!("Not found from your dictionary"), Color::Red);
+            } else {
+                println!("{}", value);
+            }
         }
         SubCommands::Rm { key } => {
             let dictionaries = dictionary_application_service.remove(key);

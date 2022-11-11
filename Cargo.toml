@@ -1,6 +1,6 @@
 [package]
 name = "wordic"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 authors= ["yujikawa"]
 description = "This is command line tool to manage word dictionary."
