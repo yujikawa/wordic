@@ -25,12 +25,14 @@ impl<T: IDictionaryRepository> DictionaryApplicationService<T> {
                 &format!("You have created {} dictionaries", len),
                 Color::Green,
             );
+            println!("| No | Key | Description | Created at |");
+            println!("| -- | --- | ----------- | ---------- |");
 
             for (i, v) in dictionaries.iter().enumerate() {
                 if v.description.len() == 0 {
-                    println!("{} : {}", i, v.key);
+                    println!("| {} | {} |           | {}|", i, v.key, v.timestamp);
                 } else {
-                    println!("{} : {} <{}> ", i, v.key, v.description);
+                    println!("| {} | {} | {} | {}|", i, v.key, v.description, v.timestamp);
                 }
             }
         } else {

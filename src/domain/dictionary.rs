@@ -1,3 +1,4 @@
+use chrono::Local;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -5,6 +6,7 @@ pub struct Dictionary {
     pub key: String,
     pub value: String,
     pub description: String,
+    pub timestamp: String,
 }
 
 impl Dictionary {
@@ -13,6 +15,7 @@ impl Dictionary {
             key: key,
             value: value,
             description: description,
+            timestamp: Local::now().to_string(),
         }
     }
 }
