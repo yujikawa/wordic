@@ -42,10 +42,18 @@ impl<T: IDictionaryRepository> DictionaryApplicationService<T> {
                         i, v.key, "", v.timestamp
                     );
                 } else {
-                    println!(
-                        "{0: <10} | {1: <10} | {2: <30} | {3: <35}",
-                        i, v.key, v.description, v.timestamp
-                    );
+                    if v.description.len() > 30 {
+                        let description = v.description[..28].to_string() + "..";
+                        println!(
+                            "{0: <10} | {1: <10} | {2: <30} | {3: <35}",
+                            i, v.key, description, v.timestamp
+                        );
+                    } else {
+                        println!(
+                            "{0: <10} | {1: <10} | {2: <30} | {3: <35}",
+                            i, v.key, v.description, v.timestamp
+                        );
+                    }
                 }
             }
         } else {
