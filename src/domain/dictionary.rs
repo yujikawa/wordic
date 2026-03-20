@@ -12,9 +12,9 @@ pub struct Dictionary {
 impl Dictionary {
     pub fn new(key: String, value: String, description: String) -> Self {
         Dictionary {
-            key: key,
-            value: value,
-            description: description,
+            key,
+            value,
+            description,
             timestamp: Local::now().to_string(),
         }
     }

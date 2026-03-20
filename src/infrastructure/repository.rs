@@ -19,7 +19,11 @@ pub trait IDictionaryRepository {
     fn load_data(&self) -> Vec<Dictionary>;
     fn save(&self, dictionaries: Vec<Dictionary>) -> Result<(), String>;
     fn get(&self, key: String) -> Result<String, String>;
+    fn get_dict(&self, key: String) -> Option<Dictionary>;
     fn remove(&self, key: String) -> Vec<Dictionary>;
+    fn search(&self, keyword: String) -> Vec<Dictionary>;
+    fn export(&self, path: &str) -> Result<(), String>;
+    fn import(&self, path: &str) -> Result<(), String>;
 }
 
 pub struct DictionaryJsonRepository {
@@ -35,9 +39,8 @@ impl IDictionaryRepository for DictionaryJsonRepository {
         let save_dir = self.get_home_path();
         let file_path = save_dir.join(&self.file_name);
         if !save_dir.exists() {
-            match fs::create_dir(save_dir) {
-                Err(why) => println!("! {:?}", why.kind()),
-                Ok(_) => {}
+            if let Err(why) = fs::create_dir(save_dir) {
+                println!("! {:?}", why.kind())
             }
         }
         if !file_path.exists() {
@@ -71,19 +74,16 @@ impl IDictionaryRepository for DictionaryJsonRepository {
         let file_path = save_dir.join(&self.file_name);
         let serialized = serde_json::to_string(&dictionaries).unwrap();
         let mut file = fs::File::create(file_path).unwrap();
-        let _ = file.write_all(serialized.as_bytes()).unwrap();
+        file.write_all(serialized.as_bytes()).unwrap();
         Ok(())
     }
 
     fn get(&self, key: String) -> Result<String, String> {
-        let mut value: String = "".to_string();
-        let dictionaries = self.load_data();
-        for i in dictionaries {
-            if i.key == key {
-                value = i.value;
-            }
-        }
-        Ok(value)
+        Ok(self.get_dict(key).map(|d| d.value).unwrap_or_default())
+    }
+
+    fn get_dict(&self, key: String) -> Option<Dictionary> {
+        self.load_data().into_iter().find(|d| d.key == key)
     }
 
     fn remove(&self, key: String) -> Vec<Dictionary> {
@@ -91,14 +91,45 @@ impl IDictionaryRepository for DictionaryJsonRepository {
         dictionaries.retain(|x| x.key != key);
         dictionaries
     }
+
+    fn search(&self, keyword: String) -> Vec<Dictionary> {
+        self.load_data()
+            .into_iter()
+            .filter(|d| {
+                d.key.contains(&keyword)
+                    || d.value.contains(&keyword)
+                    || d.description.contains(&keyword)
+            })
+            .collect()
+    }
+
+    fn export(&self, path: &str) -> Result<(), String> {
+        let dictionaries = self.load_data();
+        let serialized = serde_json::to_string(&dictionaries).map_err(|e| e.to_string())?;
+        let mut file = fs::File::create(path).map_err(|e| e.to_string())?;
+        file.write_all(serialized.as_bytes())
+            .map_err(|e| e.to_string())
+    }
+
+    fn import(&self, path: &str) -> Result<(), String> {
+        let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
+        let imported: Vec<Dictionary> =
+            serde_json::from_str(&content).map_err(|e| e.to_string())?;
+        self.save(imported)
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::sync::Mutex;
+
+    // All tests share ~/.wordic/wordic.json, so run them serially.
+    static LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_repository() {
+        let _guard = LOCK.lock().unwrap();
         let dictionary_repository = DictionaryJsonRepository::new();
         let _ = dictionary_repository.init().unwrap();
         let value = dictionary_repository
@@ -111,5 +142,86 @@ mod test {
         assert!(() == value);
         let value = dictionary_repository.get(String::from("sample")).unwrap();
         assert!(value == "sample_value");
+    }
+
+    #[test]
+    fn test_get_dict() {
+        let _guard = LOCK.lock().unwrap();
+        let repo = DictionaryJsonRepository::new();
+        let _ = repo.init();
+        let _ = repo.register(Dictionary::new(
+            String::from("get_dict_key"),
+            String::from("get_dict_value"),
+            String::from("get_dict_desc"),
+        ));
+        let result = repo.get_dict(String::from("get_dict_key"));
+        assert!(result.is_some());
+        let dict = result.unwrap();
+        assert_eq!(dict.value, "get_dict_value");
+        assert_eq!(dict.description, "get_dict_desc");
+
+        let none = repo.get_dict(String::from("zzz_not_exist_zzz"));
+        assert!(none.is_none());
+    }
+
+    #[test]
+    fn test_search() {
+        let _guard = LOCK.lock().unwrap();
+        let repo = DictionaryJsonRepository::new();
+        let _ = repo.init();
+        let _ = repo.register(Dictionary::new(
+            String::from("search_key_rust"),
+            String::from("systems programming language"),
+            String::from("search_desc"),
+        ));
+        let _ = repo.register(Dictionary::new(
+            String::from("search_key_python"),
+            String::from("scripting language"),
+            String::from("search_desc"),
+        ));
+
+        // key match
+        let results = repo.search(String::from("search_key_rust"));
+        assert!(results.iter().any(|d| d.key == "search_key_rust"));
+        assert!(!results.iter().any(|d| d.key == "search_key_python"));
+
+        // value match
+        let results = repo.search(String::from("systems programming"));
+        assert!(results.iter().any(|d| d.key == "search_key_rust"));
+
+        // description match
+        let results = repo.search(String::from("search_desc"));
+        assert!(results.iter().any(|d| d.key == "search_key_rust"));
+        assert!(results.iter().any(|d| d.key == "search_key_python"));
+
+        // no match
+        let results = repo.search(String::from("zzz_no_match_zzz"));
+        assert!(!results.iter().any(|d| d.key == "search_key_rust"));
+    }
+
+    #[test]
+    fn test_export_import() {
+        let _guard = LOCK.lock().unwrap();
+        let repo = DictionaryJsonRepository::new();
+        let _ = repo.init();
+        let _ = repo.register(Dictionary::new(
+            String::from("export_test_key"),
+            String::from("export_test_value"),
+            String::from("export_test_desc"),
+        ));
+
+        let export_path = "/tmp/wordic_test_export.json";
+        assert!(repo.export(export_path).is_ok());
+        assert!(std::path::Path::new(export_path).exists());
+
+        // wipe data, then import
+        let _ = repo.save(vec![]);
+        assert_eq!(repo.get(String::from("export_test_key")).unwrap(), "");
+
+        assert!(repo.import(export_path).is_ok());
+        assert_eq!(
+            repo.get(String::from("export_test_key")).unwrap(),
+            "export_test_value"
+        );
     }
 }

@@ -9,7 +9,7 @@ mod functions;
 use functions::display::{display, Color};
 
 #[derive(Parser, Debug)]
-#[clap(
+#[command(
     name = env!("CARGO_PKG_NAME"),
     version = env!("CARGO_PKG_VERSION"),
     author = env!("CARGO_PKG_AUTHORS"),
@@ -17,63 +17,89 @@ use functions::display::{display, Color};
     arg_required_else_help = true,
 )]
 struct Cli {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     subcommand: SubCommands,
 }
 
 #[derive(Debug, Subcommand)]
 enum SubCommands {
-    #[clap(about = "Initialize new dictionary")]
+    #[command(about = "Initialize new dictionary")]
     Init,
 
-    #[clap(about = "Show keys from dictionary")]
+    #[command(about = "Show all words in dictionary")]
     Show,
 
-    #[clap(arg_required_else_help = true, about = "Add new dictionary")]
+    #[command(arg_required_else_help = true, about = "Add a new word")]
     Add {
         key: String,
         value: String,
-        #[clap(default_value = "")]
+        #[arg(default_value = "")]
         description: String,
     },
 
-    #[clap(arg_required_else_help = true, about = "Get value from dictionary")]
-    Get { key: String },
+    #[command(arg_required_else_help = true, about = "Get value for a key")]
+    Get {
+        key: String,
+        /// Show full entry including description and timestamp
+        #[arg(short, long)]
+        full: bool,
+    },
 
-    #[clap(arg_required_else_help = true, about = "Remove value from dictionary")]
+    #[command(arg_required_else_help = true, about = "Remove a word from dictionary")]
     Rm { key: String },
+
+    #[command(
+        arg_required_else_help = true,
+        about = "Search words by keyword (key/value/description)"
+    )]
+    Search { keyword: String },
+
+    #[command(
+        arg_required_else_help = true,
+        about = "Export dictionary to a JSON file"
+    )]
+    Export { path: String },
+
+    #[command(
+        arg_required_else_help = true,
+        about = "Import dictionary from a JSON file (replaces current data)"
+    )]
+    Import { path: String },
 }
 
 fn main() {
-    let dictionary_application_service =
-        DictionaryApplicationService::new(DictionaryJsonRepository::new());
-
+    let svc = DictionaryApplicationService::new(DictionaryJsonRepository::new());
     let cli = Cli::parse();
 
-    // dictionary_application_service.init().unwrap();
-
     match cli.subcommand {
-        SubCommands::Init => dictionary_application_service.init().unwrap(),
+        SubCommands::Init => svc.init().unwrap(),
+        SubCommands::Show => svc.show(),
         SubCommands::Add {
             key,
             value,
             description,
-        } => dictionary_application_service
+        } => svc
             .register(Dictionary::new(key, value, description))
             .unwrap(),
-        SubCommands::Show => dictionary_application_service.show(),
-        SubCommands::Get { key } => {
-            let value = dictionary_application_service.get(key).unwrap();
-            if value.is_empty() {
-                display(&format!("Not found from your dictionary"), Color::Red);
+        SubCommands::Get { key, full } => {
+            if full {
+                svc.get_full(key);
             } else {
-                println!("{}", value);
+                let value = svc.get(key).unwrap();
+                if value.is_empty() {
+                    display("Not found in your dictionary.", Color::Red);
+                } else {
+                    println!("{}", value);
+                }
             }
         }
         SubCommands::Rm { key } => {
-            let dictionaries = dictionary_application_service.remove(key);
-            dictionary_application_service.save(dictionaries).unwrap();
-            dictionary_application_service.show();
+            let dictionaries = svc.remove(key);
+            svc.save(dictionaries).unwrap();
+            svc.show();
         }
+        SubCommands::Search { keyword } => svc.search(keyword),
+        SubCommands::Export { path } => svc.export(path).unwrap(),
+        SubCommands::Import { path } => svc.import(path).unwrap(),
     }
 }

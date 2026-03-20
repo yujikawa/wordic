@@ -7,14 +7,14 @@ pub struct DictionaryApplicationService<T> {
 }
 
 impl<T: IDictionaryRepository> DictionaryApplicationService<T> {
-    pub fn init(&self) -> Result<(), String> {
-        self.dictionary_repository.init()
-    }
-
     pub fn new(dictionary_repository: T) -> Self {
         DictionaryApplicationService {
-            dictionary_repository: dictionary_repository,
+            dictionary_repository,
         }
+    }
+
+    pub fn init(&self) -> Result<(), String> {
+        self.dictionary_repository.init()
     }
 
     pub fn show(&self) {
@@ -22,43 +22,29 @@ impl<T: IDictionaryRepository> DictionaryApplicationService<T> {
         let len = dictionaries.len();
         if len > 0 {
             display(
-                &format!("You have created {} dictionaries", len),
+                &format!("You have {} word(s) in your dictionary", len),
                 Color::Green,
             );
             println!();
             println!(
-                "{0: <10} | {1: <10} | {2: <30} | {3: <35}",
-                "No", "Key", "Description", "Created at"
+                "{0: <5} | {1: <20} | {2: <25} | {3: <25} | {4: <30}",
+                "No", "Key", "Value", "Description", "Created at"
             );
             println!(
-                "{0:-<10} | {1:-<10} | {2:-<30} | {3:-<35}",
-                "-", "-", "-", "-"
+                "{0:-<5}-+-{1:-<20}-+-{2:-<25}-+-{3:-<25}-+-{4:-<30}",
+                "", "", "", "", ""
             );
-
             for (i, v) in dictionaries.iter().enumerate() {
-                if v.description.len() == 0 {
-                    println!(
-                        "{0: <10} | {1: <10} | {2: <30} | {3: <35}",
-                        i, v.key, "", v.timestamp
-                    );
-                } else {
-                    if v.description.len() > 30 {
-                        let description = v.description[..28].to_string() + "..";
-                        println!(
-                            "{0: <10} | {1: <10} | {2: <30} | {3: <35}",
-                            i, v.key, description, v.timestamp
-                        );
-                    } else {
-                        println!(
-                            "{0: <10} | {1: <10} | {2: <30} | {3: <35}",
-                            i, v.key, v.description, v.timestamp
-                        );
-                    }
-                }
+                let value = truncate(&v.value, 25);
+                let description = truncate(&v.description, 25);
+                println!(
+                    "{0: <5} | {1: <20} | {2: <25} | {3: <25} | {4: <30}",
+                    i, v.key, value, description, v.timestamp
+                );
             }
         } else {
-            display("You have'nt created dictionaries", Color::Red);
-            display("ex) wordic add sample value", Color::Red);
+            display("Your dictionary is empty.", Color::Red);
+            display("ex) wordic add <key> <value>", Color::Red);
         }
     }
 
@@ -68,15 +54,74 @@ impl<T: IDictionaryRepository> DictionaryApplicationService<T> {
         Ok(())
     }
 
-    pub fn save(&self, dictionaries: Vec<Dictionary>) -> Result<(), String> {
-        self.dictionary_repository.save(dictionaries)
-    }
-
     pub fn get(&self, key: String) -> Result<String, String> {
         self.dictionary_repository.get(key)
     }
 
+    pub fn get_full(&self, key: String) {
+        match self.dictionary_repository.get_dict(key) {
+            Some(d) => {
+                println!("Key        : {}", d.key);
+                println!("Value      : {}", d.value);
+                println!("Description: {}", d.description);
+                println!("Created at : {}", d.timestamp);
+            }
+            None => display("Not found in your dictionary.", Color::Red),
+        }
+    }
+
+    pub fn search(&self, keyword: String) {
+        let results = self.dictionary_repository.search(keyword.clone());
+        if results.is_empty() {
+            display(&format!("No results for \"{}\".", keyword), Color::Red);
+        } else {
+            display(&format!("{} result(s) found.", results.len()), Color::Green);
+            println!();
+            println!(
+                "{0: <5} | {1: <20} | {2: <25} | {3: <25} | {4: <30}",
+                "No", "Key", "Value", "Description", "Created at"
+            );
+            println!(
+                "{0:-<5}-+-{1:-<20}-+-{2:-<25}-+-{3:-<25}-+-{4:-<30}",
+                "", "", "", "", ""
+            );
+            for (i, v) in results.iter().enumerate() {
+                let value = truncate(&v.value, 25);
+                let description = truncate(&v.description, 25);
+                println!(
+                    "{0: <5} | {1: <20} | {2: <25} | {3: <25} | {4: <30}",
+                    i, v.key, value, description, v.timestamp
+                );
+            }
+        }
+    }
+
+    pub fn save(&self, dictionaries: Vec<Dictionary>) -> Result<(), String> {
+        self.dictionary_repository.save(dictionaries)
+    }
+
     pub fn remove(&self, key: String) -> Vec<Dictionary> {
         self.dictionary_repository.remove(key)
+    }
+
+    pub fn export(&self, path: String) -> Result<(), String> {
+        self.dictionary_repository.export(&path)?;
+        display(&format!("Exported to {}", path), Color::Green);
+        Ok(())
+    }
+
+    pub fn import(&self, path: String) -> Result<(), String> {
+        self.dictionary_repository.import(&path)?;
+        display(&format!("Imported from {}", path), Color::Green);
+        self.show();
+        Ok(())
+    }
+}
+
+fn truncate(s: &str, max: usize) -> String {
+    if s.len() > max {
+        format!("{}..", &s[..max - 2])
+    } else {
+        s.to_string()
     }
 }
