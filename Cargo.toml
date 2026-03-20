@@ -1,6 +1,6 @@
 [package]
 name = "wordic"
-version = "0.1.5"
+version = "0.2.0"
 edition = "2021"
 authors= ["yujikawa"]
 description = "This is command line tool to manage word dictionary."
@@ -11,8 +11,8 @@ repository = "https://github.com/yujikawa/wordic"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.2.17", features = ["derive"] }
+clap = { version = "4", features = ["derive"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-dirs = "4.0"
-chrono = "0.4.23"
+dirs = "6.0"
+chrono = "0.4"

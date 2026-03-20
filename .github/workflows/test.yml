@@ -1,6 +1,6 @@
 name: test
 
-on: 
+on:
   push:
     branches:
       - develop
@@ -11,26 +11,19 @@ jobs:
     name: run test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target          
+            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          components: rustfmt, clippy
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --release --all-features
+      - name: Install stable toolchain
+        run: rustup toolchain install stable --component rustfmt,clippy
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy
+      - name: test
+        run: cargo test --release --all-features
